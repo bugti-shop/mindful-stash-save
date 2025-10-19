@@ -6,6 +6,7 @@ import SavingsChart from '@/components/SavingsChart';
 import EmotionalInsights from '@/components/EmotionalInsights';
 import { toast } from '@/hooks/use-toast';
 import { storage } from '@/lib/storage';
+import logoImg from '@/assets/logo.png';
 
 interface Jar {
   id: number;
@@ -387,12 +388,15 @@ const Index = () => {
       )}
 
       {/* Glassmorphism Header */}
-      <div className={`sticky top-0 z-30 mb-6 ${darkMode ? 'bg-gray-900/15' : 'bg-white/15'} backdrop-blur-[1px] border-b ${darkMode ? 'border-gray-700/20' : 'border-gray-200/20'} shadow-lg`}>
+      <div className={`sticky top-0 z-30 mb-6 ${darkMode ? 'bg-gray-900/90' : 'bg-white/90'} backdrop-blur-md border-b ${darkMode ? 'border-gray-700/20' : 'border-gray-200/20'} shadow-lg transform-gpu`}>
         <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4">
           <div className="flex justify-between items-center">
-            <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold ${textColor} tracking-tight`}>
-              Jarify
-            </h1>
+            <div className="flex items-center gap-3">
+              <img src={logoImg} alt="Jarify Logo" className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-lg" />
+              <h1 className={`text-2xl sm:text-3xl md:text-4xl font-bold ${textColor} tracking-tight`}>
+                Jarify
+              </h1>
+            </div>
             <button
               onClick={() => setDarkMode(!darkMode)}
               className={`p-2 sm:p-3 rounded-full ${darkMode ? 'bg-gray-800/80' : 'bg-white/80'} backdrop-blur-sm shadow-lg hover:shadow-xl transition-all border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}
