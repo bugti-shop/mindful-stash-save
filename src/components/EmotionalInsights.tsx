@@ -1,3 +1,5 @@
+import { formatCurrency } from '@/lib/utils';
+
 interface EmotionalInsightsProps {
   totalSaved: number;
   totalTarget: number;
@@ -80,7 +82,7 @@ const EmotionalInsights = ({ totalSaved, totalTarget, jarsCount, darkMode, curre
           </div>
           <div className={`${darkMode ? 'bg-gray-700' : 'bg-gradient-to-br from-green-50 to-emerald-50'} rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center`}>
             <p className={`text-xs sm:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>Saved</p>
-            <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600">{currency}{totalSaved.toLocaleString()}</p>
+            <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-600">{currency}{formatCurrency(totalSaved)}</p>
           </div>
         </div>
       </div>

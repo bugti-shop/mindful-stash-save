@@ -4,7 +4,6 @@ import SavingsButton from '@/components/SavingsButton';
 import JarVisualization from '@/components/JarVisualization';
 import SavingsChart from '@/components/SavingsChart';
 import EmotionalInsights from '@/components/EmotionalInsights';
-import { toast } from '@/hooks/use-toast';
 import { storage } from '@/lib/storage';
 import { formatCurrency } from '@/lib/utils';
 import logoImg from '@/assets/logo.png';
@@ -20,6 +19,7 @@ interface Jar {
   records?: TransactionRecord[];
   currency?: string;
   categoryId?: number;
+  targetDate?: string;
 }
 
 interface Category {
@@ -54,7 +54,7 @@ const Index = () => {
   const [selectedJar, setSelectedJar] = useState<Jar | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
-  const [newJar, setNewJar] = useState({ name: '', target: '', currency: '$', categoryId: 0 });
+  const [newJar, setNewJar] = useState({ name: '', target: '', currency: '$', categoryId: 0, targetDate: '' });
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [newCategory, setNewCategory] = useState({ name: '', icon: '' });
   const [addAmount, setAddAmount] = useState('');
@@ -118,38 +118,20 @@ const Index = () => {
     }
   }, [darkMode]);
 
-  // Weekly notification system
+  // Handle clicks outside notes to deselect
   useEffect(() => {
-    const checkAndSendNotifications = () => {
-      const lastNotificationDate = storage.loadLastNotification();
-      const today = new Date().toDateString();
-      
-      if (lastNotificationDate !== today && jars.length > 0) {
-        const dayOfWeek = new Date().getDay();
-        // Send notification every Monday (1) or when opening app after a week
-        if (dayOfWeek === 1 || !lastNotificationDate) {
-          jars.forEach(jar => {
-            const remaining = jar.target - jar.saved;
-            const percentSaved = ((jar.saved / jar.target) * 100).toFixed(1);
-            
-            toast({
-              title: `💰 ${jar.name} Update`,
-              description: `Saved: ${jar.currency}${formatCurrency(jar.saved)} (${percentSaved}%) | Remaining: ${jar.currency}${formatCurrency(remaining)}`,
-              duration: 6000,
-            });
-          });
-          
-          storage.saveLastNotification(today);
-        }
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-note-item]')) {
+        setSelectedNoteId(null);
+        setSelectedJarNoteId(null);
       }
     };
 
-    // Check on mount and set up interval
-    checkAndSendNotifications();
-    const interval = setInterval(checkAndSendNotifications, 1000 * 60 * 60); // Check hourly
-    
-    return () => clearInterval(interval);
-  }, [jars]);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
 
   const noteColors: Record<string, { bg: string; border: string }> = {
     yellow: { bg: '#FEFF9C', border: '#E5E67A' },
@@ -172,15 +154,12 @@ const Index = () => {
         notes: [],
         records: [],
         currency: newJar.currency,
-        categoryId: newJar.categoryId || categories[0].id
+        categoryId: newJar.categoryId || categories[0].id,
+        targetDate: newJar.targetDate || undefined
       };
       setJars([...jars, jar]);
-      setNewJar({ name: '', target: '', currency: '$', categoryId: categories[0].id });
+      setNewJar({ name: '', target: '', currency: '$', categoryId: categories[0].id, targetDate: '' });
       setShowCreateModal(false);
-      toast({
-        title: "🎉 Jar Created!",
-        description: `${jar.name} has been created successfully.`,
-      });
     }
   };
 
@@ -194,10 +173,6 @@ const Index = () => {
       setCategories([...categories, category]);
       setNewCategory({ name: '', icon: '' });
       setShowCategoryModal(false);
-      toast({
-        title: "✨ Category Created!",
-        description: `${category.name} category has been created.`,
-      });
     }
   };
 
@@ -226,10 +201,6 @@ const Index = () => {
       setSelectedJar(updatedJars.find(j => j.id === selectedJar.id) || null);
       setNewJarNote({ text: '', color: 'yellow' });
       setShowJarNoteModal(false);
-      toast({
-        title: "📝 Note Added!",
-        description: "Your note has been saved to this jar.",
-      });
     }
   };
 
@@ -252,10 +223,6 @@ const Index = () => {
       setNotes([...notes, { id: Date.now(), text: newNote.text, color: newNote.color }]);
       setNewNote({ text: '', color: 'yellow' });
       setShowNoteModal(false);
-      toast({
-        title: "📝 Note Added!",
-        description: "Your note has been saved.",
-      });
     }
   };
 
@@ -270,11 +237,6 @@ const Index = () => {
     if (selectedJar && selectedJar.id === jarId) {
       setSelectedJar(null);
     }
-    toast({
-      title: "🗑️ Jar Deleted",
-      description: "The jar has been removed.",
-      variant: "destructive",
-    });
   };
 
   const addMoney = () => {
@@ -286,10 +248,6 @@ const Index = () => {
         if (newSaved >= jar.target && jar.saved < jar.target) {
           setShowConfetti(true);
           setTimeout(() => setShowConfetti(false), 3000);
-          toast({
-            title: "🎉 Goal Reached!",
-            description: `Congratulations! You've reached your ${jar.name} goal!`,
-          });
         }
         const newRecord: TransactionRecord = {
           id: Date.now(),
@@ -309,10 +267,6 @@ const Index = () => {
     setJars(updatedJars);
     setSelectedJar(updatedJars.find(j => j.id === selectedJar.id) || null);
     setAddAmount('');
-    toast({
-      title: "💰 Money Added!",
-      description: `${selectedJar.currency}${formatCurrency(amount)} added to ${selectedJar.name}`,
-    });
   };
 
   const withdrawMoney = () => {
@@ -340,10 +294,6 @@ const Index = () => {
     setJars(updatedJars);
     setSelectedJar(updatedJars.find(j => j.id === selectedJar.id) || null);
     setWithdrawAmount('');
-    toast({
-      title: "💸 Money Withdrawn",
-      description: `${selectedJar.currency}${formatCurrency(amount)} withdrawn from ${selectedJar.name}`,
-    });
   };
 
   const getProgress = (jar: Jar) => ((jar.saved / jar.target) * 100).toFixed(1);
@@ -373,13 +323,33 @@ const Index = () => {
         setDailySavings(target / daysRemaining);
       } else {
         setDailySavings(null);
-        toast({
-          title: "Invalid Date",
-          description: "Please select a future date.",
-          variant: "destructive",
-        });
       }
     }
+  };
+
+  const getInvestmentPlan = (jar: Jar) => {
+    const remaining = jar.target - jar.saved;
+    
+    if (jar.targetDate) {
+      const targetDate = new Date(jar.targetDate);
+      const today = new Date();
+      const daysRemaining = Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysRemaining > 0) {
+        return {
+          daily: remaining / daysRemaining,
+          weekly: remaining / (daysRemaining / 7),
+          monthly: remaining / (daysRemaining / 30)
+        };
+      }
+    }
+    
+    // Default calculation if no target date
+    return {
+      daily: remaining / 30,
+      weekly: remaining / 4,
+      monthly: remaining
+    };
   };
 
   return (
@@ -453,6 +423,7 @@ const Index = () => {
                 {notes.map(note => (
                   <div
                     key={note.id}
+                    data-note-item
                     onClick={() => setSelectedNoteId(note.id)}
                     className="relative min-w-[220px] w-[220px] lg:w-full lg:max-w-[220px] h-[180px] p-4 rounded shadow-md flex-shrink-0 cursor-pointer"
                     style={{
@@ -582,7 +553,7 @@ const Index = () => {
                 <div className="flex items-center justify-center py-8">
                   <SavingsButton onClick={() => {
                     if (categories.length > 0) {
-                      setNewJar({ name: '', target: '', currency: '$', categoryId: categories[0].id });
+                      setNewJar({ name: '', target: '', currency: '$', categoryId: categories[0].id, targetDate: '' });
                     }
                     setShowCreateModal(true);
                   }} size="default" className="whitespace-nowrap text-sm sm:text-base w-auto">
@@ -684,31 +655,44 @@ const Index = () => {
 
             {/* Investment Projections */}
             <div className={`${darkMode ? 'bg-gray-700' : 'bg-gradient-to-br from-blue-50 to-purple-50'} rounded-2xl p-4 mb-6`}>
-              <h3 className={`text-lg font-bold ${textColor} mb-4 flex items-center gap-2`}>
+              <h3 className={`text-lg font-bold ${textColor} mb-2 flex items-center gap-2`}>
                 📈 Investment Plan
+                {selectedJar.targetDate && (
+                  <span className={`text-xs ${textSecondary} font-normal`}>
+                    (Target: {new Date(selectedJar.targetDate).toLocaleDateString()})
+                  </span>
+                )}
               </h3>
+              {selectedJar.targetDate && (
+                <p className={`text-xs ${textSecondary} mb-4`}>
+                  Based on your target date
+                </p>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 text-center`}>
                   <p className={`text-xs ${textSecondary} mb-1`}>Daily</p>
                   <p className={`text-xl font-bold ${textColor}`}>
-                    {selectedJar.currency || '$'}{formatCurrency((selectedJar.target - selectedJar.saved) / 30)}
+                    {selectedJar.currency || '$'}{formatCurrency(getInvestmentPlan(selectedJar).daily)}
                   </p>
                 </div>
                 <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 text-center`}>
                   <p className={`text-xs ${textSecondary} mb-1`}>Weekly</p>
                   <p className={`text-xl font-bold ${textColor}`}>
-                    {selectedJar.currency || '$'}{formatCurrency((selectedJar.target - selectedJar.saved) / 4)}
+                    {selectedJar.currency || '$'}{formatCurrency(getInvestmentPlan(selectedJar).weekly)}
                   </p>
                 </div>
                 <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 text-center`}>
                   <p className={`text-xs ${textSecondary} mb-1`}>Monthly</p>
                   <p className={`text-xl font-bold ${textColor}`}>
-                    {selectedJar.currency || '$'}{formatCurrency(selectedJar.target - selectedJar.saved)}
+                    {selectedJar.currency || '$'}{formatCurrency(getInvestmentPlan(selectedJar).monthly)}
                   </p>
                 </div>
               </div>
               <p className={`text-xs ${textSecondary} text-center mt-3`}>
-                Projected amounts to reach your {selectedJar.currency || '$'}{formatCurrency(selectedJar.target)} goal
+                {selectedJar.targetDate 
+                  ? `Save these amounts to reach your ${selectedJar.currency || '$'}${formatCurrency(selectedJar.target)} goal by your target date`
+                  : `Projected amounts to reach your ${selectedJar.currency || '$'}${formatCurrency(selectedJar.target)} goal`
+                }
               </p>
             </div>
 
@@ -719,6 +703,7 @@ const Index = () => {
                   {selectedJar.notes.map(note => (
                     <div
                       key={note.id}
+                      data-note-item
                       onClick={() => setSelectedJarNoteId(note.id)}
                       className="relative min-w-[220px] w-[220px] lg:w-full h-[180px] p-4 rounded shadow-md flex-shrink-0 cursor-pointer"
                       style={{
@@ -831,6 +816,21 @@ const Index = () => {
                     <option value="CAD">CAD (Canadian Dollar)</option>
                     <option value="AUD">AUD (Australian Dollar)</option>
                   </select>
+                </div>
+                <div className="mb-4">
+                  <label className={`block text-sm font-medium mb-2 ${textColor}`}>Target Date (Optional)</label>
+                  <input
+                    type="date"
+                    value={newJar.targetDate}
+                    onChange={(e) => setNewJar({ ...newJar, targetDate: e.target.value })}
+                    className={`w-full px-4 py-3 rounded-xl border-2 border-primary focus:outline-none ${
+                      darkMode ? 'bg-gray-700 text-white' : ''
+                    }`}
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                  <p className={`text-xs ${textSecondary} mt-1`}>
+                    Set a deadline to calculate daily/weekly/monthly savings needed
+                  </p>
                 </div>
                 <div className="flex gap-3">
                   <SavingsButton variant="secondary" onClick={() => setShowCreateModal(false)} className="flex-1 whitespace-nowrap">
