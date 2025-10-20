@@ -6,6 +6,7 @@ import SavingsChart from '@/components/SavingsChart';
 import EmotionalInsights from '@/components/EmotionalInsights';
 import { toast } from '@/hooks/use-toast';
 import { storage } from '@/lib/storage';
+import { formatCurrency } from '@/lib/utils';
 import logoImg from '@/assets/logo.png';
 
 interface Jar {
@@ -70,6 +71,8 @@ const Index = () => {
   const [calcTargetAmount, setCalcTargetAmount] = useState('');
   const [calcTargetDate, setCalcTargetDate] = useState('');
   const [dailySavings, setDailySavings] = useState<number | null>(null);
+  const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
+  const [selectedJarNoteId, setSelectedJarNoteId] = useState<number | null>(null);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -131,7 +134,7 @@ const Index = () => {
             
             toast({
               title: `💰 ${jar.name} Update`,
-              description: `Saved: ${jar.currency}${jar.saved.toLocaleString()} (${percentSaved}%) | Remaining: ${jar.currency}${remaining.toLocaleString()}`,
+              description: `Saved: ${jar.currency}${formatCurrency(jar.saved)} (${percentSaved}%) | Remaining: ${jar.currency}${formatCurrency(remaining)}`,
               duration: 6000,
             });
           });
@@ -308,7 +311,7 @@ const Index = () => {
     setAddAmount('');
     toast({
       title: "💰 Money Added!",
-      description: `${selectedJar.currency}${amount} added to ${selectedJar.name}`,
+      description: `${selectedJar.currency}${formatCurrency(amount)} added to ${selectedJar.name}`,
     });
   };
 
@@ -339,7 +342,7 @@ const Index = () => {
     setWithdrawAmount('');
     toast({
       title: "💸 Money Withdrawn",
-      description: `${selectedJar.currency}${amount} withdrawn from ${selectedJar.name}`,
+      description: `${selectedJar.currency}${formatCurrency(amount)} withdrawn from ${selectedJar.name}`,
     });
   };
 
@@ -450,18 +453,25 @@ const Index = () => {
                 {notes.map(note => (
                   <div
                     key={note.id}
-                    className="relative min-w-[220px] w-[220px] lg:w-full lg:max-w-[220px] h-[180px] p-4 rounded shadow-md flex-shrink-0"
+                    onClick={() => setSelectedNoteId(note.id)}
+                    className="relative min-w-[220px] w-[220px] lg:w-full lg:max-w-[220px] h-[180px] p-4 rounded shadow-md flex-shrink-0 cursor-pointer"
                     style={{
                       backgroundColor: noteColors[note.color].bg,
                       border: `2px solid ${noteColors[note.color].border}`
                     }}
                   >
-                    <button
-                      onClick={() => deleteNote(note.id)}
-                      className="absolute top-2 right-2 bg-red-500 text-white w-6 h-6 rounded-full hover:bg-red-600 transition-all flex items-center justify-center text-lg font-bold"
-                    >
-                      ×
-                    </button>
+                    {selectedNoteId === note.id && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteNote(note.id);
+                          setSelectedNoteId(null);
+                        }}
+                        className="absolute top-2 right-2 bg-red-500 text-white w-6 h-6 rounded-full hover:bg-red-600 transition-all flex items-center justify-center text-lg font-bold"
+                      >
+                        ×
+                      </button>
+                    )}
                     <p className="text-gray-800 text-sm break-words whitespace-pre-wrap overflow-hidden">
                       {note.text}
                     </p>
@@ -503,10 +513,10 @@ const Index = () => {
                         </div>
                         <div className="text-right">
                           <p className={`text-base sm:text-lg font-bold text-green-600`}>
-                            {categoryJars.length > 0 ? categoryJars[0].currency : '$'}{categoryTotal.toLocaleString()}
+                            {categoryJars.length > 0 ? categoryJars[0].currency : '$'}{formatCurrency(categoryTotal)}
                           </p>
                           <p className={`text-xs ${textSecondary}`}>
-                            of {categoryJars.length > 0 ? categoryJars[0].currency : '$'}{categoryTarget.toLocaleString()}
+                            of {categoryJars.length > 0 ? categoryJars[0].currency : '$'}{formatCurrency(categoryTarget)}
                           </p>
                           <p className={`text-xs font-bold ${
                             parseFloat(categoryProgress) >= 75 ? 'text-green-600' :
@@ -554,11 +564,11 @@ const Index = () => {
                                 </div>
                               </div>
                               <div className={`flex justify-between items-center text-xs`}>
-                                <span className="text-green-600 font-semibold">{jar.currency || '$'}{jar.saved.toLocaleString()}</span>
+                                <span className="text-green-600 font-semibold">{jar.currency || '$'}{formatCurrency(jar.saved)}</span>
                                 <span className="text-red-600 font-semibold">
-                                  -{jar.currency || '$'}{Math.abs(jar.saved - jar.target).toLocaleString()}
+                                  -{jar.currency || '$'}{formatCurrency(Math.abs(jar.saved - jar.target))}
                                 </span>
-                                <span className={textSecondary}>{jar.currency || '$'}{jar.target.toLocaleString()}</span>
+                                <span className={textSecondary}>{jar.currency || '$'}{formatCurrency(jar.target)}</span>
                               </div>
                             </div>
                           );
@@ -622,14 +632,14 @@ const Index = () => {
                   <TrendingUp className="text-green-600" size={16} />
                   <span className={`text-xs sm:text-sm ${textSecondary}`}>Saved</span>
                 </div>
-                <p className={`text-base sm:text-xl md:text-2xl font-bold text-green-600 break-words`}>{selectedJar.currency || '$'}{selectedJar.saved.toLocaleString()}</p>
+                <p className={`text-base sm:text-xl md:text-2xl font-bold text-green-600 break-words`}>{selectedJar.currency || '$'}{formatCurrency(selectedJar.saved)}</p>
               </div>
               <div className={`${darkMode ? 'bg-gray-700' : 'bg-purple-50'} rounded-xl sm:rounded-2xl p-3 sm:p-4`}>
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                   <Target className="text-purple-500" size={16} />
                   <span className={`text-xs sm:text-sm ${textSecondary}`}>Target</span>
                 </div>
-                <p className={`text-base sm:text-xl md:text-2xl font-bold ${textColor} break-words`}>{selectedJar.currency || '$'}{selectedJar.target.toLocaleString()}</p>
+                <p className={`text-base sm:text-xl md:text-2xl font-bold ${textColor} break-words`}>{selectedJar.currency || '$'}{formatCurrency(selectedJar.target)}</p>
               </div>
             </div>
             <div className="space-y-3 mb-6">
@@ -681,24 +691,24 @@ const Index = () => {
                 <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 text-center`}>
                   <p className={`text-xs ${textSecondary} mb-1`}>Daily</p>
                   <p className={`text-xl font-bold ${textColor}`}>
-                    {selectedJar.currency || '$'}{((selectedJar.target - selectedJar.saved) / 30).toFixed(2)}
+                    {selectedJar.currency || '$'}{formatCurrency((selectedJar.target - selectedJar.saved) / 30)}
                   </p>
                 </div>
                 <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 text-center`}>
                   <p className={`text-xs ${textSecondary} mb-1`}>Weekly</p>
                   <p className={`text-xl font-bold ${textColor}`}>
-                    {selectedJar.currency || '$'}{((selectedJar.target - selectedJar.saved) / 4).toFixed(2)}
+                    {selectedJar.currency || '$'}{formatCurrency((selectedJar.target - selectedJar.saved) / 4)}
                   </p>
                 </div>
                 <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 text-center`}>
                   <p className={`text-xs ${textSecondary} mb-1`}>Monthly</p>
                   <p className={`text-xl font-bold ${textColor}`}>
-                    {selectedJar.currency || '$'}{(selectedJar.target - selectedJar.saved).toFixed(2)}
+                    {selectedJar.currency || '$'}{formatCurrency(selectedJar.target - selectedJar.saved)}
                   </p>
                 </div>
               </div>
               <p className={`text-xs ${textSecondary} text-center mt-3`}>
-                Projected amounts to reach your {selectedJar.currency || '$'}{selectedJar.target.toLocaleString()} goal
+                Projected amounts to reach your {selectedJar.currency || '$'}{formatCurrency(selectedJar.target)} goal
               </p>
             </div>
 
@@ -709,18 +719,25 @@ const Index = () => {
                   {selectedJar.notes.map(note => (
                     <div
                       key={note.id}
-                      className="relative min-w-[220px] w-[220px] lg:w-full h-[180px] p-4 rounded shadow-md flex-shrink-0"
+                      onClick={() => setSelectedJarNoteId(note.id)}
+                      className="relative min-w-[220px] w-[220px] lg:w-full h-[180px] p-4 rounded shadow-md flex-shrink-0 cursor-pointer"
                       style={{
                         backgroundColor: noteColors[note.color].bg,
                         border: `2px solid ${noteColors[note.color].border}`
                       }}
                     >
-                      <button
-                        onClick={() => deleteJarNote(note.id)}
-                        className="absolute top-2 right-2 bg-red-500 text-white w-6 h-6 rounded-full hover:bg-red-600 transition-all flex items-center justify-center text-lg font-bold"
-                      >
-                        ×
-                      </button>
+                      {selectedJarNoteId === note.id && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteJarNote(note.id);
+                            setSelectedJarNoteId(null);
+                          }}
+                          className="absolute top-2 right-2 bg-red-500 text-white w-6 h-6 rounded-full hover:bg-red-600 transition-all flex items-center justify-center text-lg font-bold"
+                        >
+                          ×
+                        </button>
+                      )}
                       <p className="text-gray-800 text-sm break-words whitespace-pre-wrap overflow-hidden">
                         {note.text}
                       </p>
@@ -948,7 +965,7 @@ const Index = () => {
                       <div className="flex justify-between items-center">
                         <div>
                           <p className={`font-bold ${record.type === 'saved' ? 'text-green-600' : 'text-red-600'}`}>
-                            {record.type === 'saved' ? '+ $' : '- $'}{record.amount.toLocaleString()}
+                            {record.type === 'saved' ? '+ $' : '- $'}{formatCurrency(record.amount)}
                           </p>
                           <p className={`text-sm ${textSecondary}`}>
                             {recordDate.toLocaleDateString('en-US', { 
@@ -1077,20 +1094,20 @@ const Index = () => {
                 <h4 className={`text-lg font-bold ${textColor} mb-4 text-center`}>Daily Savings Plan</h4>
                 <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-4 text-center mb-3`}>
                   <p className={`text-sm ${textSecondary} mb-1`}>Save Daily</p>
-                  <p className={`text-3xl font-bold ${textColor}`}>${dailySavings.toFixed(2)}</p>
+                  <p className={`text-3xl font-bold ${textColor}`}>${formatCurrency(dailySavings)}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 text-center`}>
                     <p className={`text-xs ${textSecondary} mb-1`}>Weekly</p>
-                    <p className={`text-lg font-bold ${textColor}`}>${(dailySavings * 7).toFixed(2)}</p>
+                    <p className={`text-lg font-bold ${textColor}`}>${formatCurrency(dailySavings * 7)}</p>
                   </div>
                   <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-3 text-center`}>
                     <p className={`text-xs ${textSecondary} mb-1`}>Monthly</p>
-                    <p className={`text-lg font-bold ${textColor}`}>${(dailySavings * 30).toFixed(2)}</p>
+                    <p className={`text-lg font-bold ${textColor}`}>${formatCurrency(dailySavings * 30)}</p>
                   </div>
                 </div>
                 <p className={`text-xs ${textSecondary} text-center mt-3`}>
-                  To reach ${parseFloat(calcTargetAmount).toLocaleString()} by {new Date(calcTargetDate).toLocaleDateString()}
+                  To reach ${formatCurrency(parseFloat(calcTargetAmount))} by {new Date(calcTargetDate).toLocaleDateString()}
                 </p>
               </div>
             )}
