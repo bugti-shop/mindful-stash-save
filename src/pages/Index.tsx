@@ -21,6 +21,7 @@ interface Jar {
   currency?: string;
   categoryId?: number;
   targetDate?: string;
+  createdAt?: string;
 }
 
 interface Category {
@@ -193,6 +194,7 @@ const Index = () => {
         currency: newJar.currency,
         categoryId: newJar.categoryId || categories[0].id,
         targetDate: newJar.targetDate || undefined,
+        createdAt: new Date().toISOString(),
       };
       setJars([...jars, jar]);
       setNewJar({ name: '', target: '', currency: '$', categoryId: categories[0].id, targetDate: '' });
@@ -620,7 +622,18 @@ const Index = () => {
                 Delete
               </SavingsButton>
             </div>
-            <h2 className={`text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 ${textColor}`}>{selectedJar.name}</h2>
+            <h2 className={`text-xl sm:text-2xl md:text-3xl font-bold mb-2 ${textColor}`}>{selectedJar.name}</h2>
+            {selectedJar.createdAt && (
+              <p className={`text-xs sm:text-sm ${textSecondary} mb-4 sm:mb-6 text-center`}>
+                Created on {new Date(selectedJar.createdAt).toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            )}
             <div className="relative h-56 sm:h-72 md:h-96 mb-4 sm:mb-6 flex items-center justify-center">
               <JarVisualization progress={parseFloat(getProgress(selectedJar))} jarId={selectedJar.id} isLarge={true} />
             </div>
