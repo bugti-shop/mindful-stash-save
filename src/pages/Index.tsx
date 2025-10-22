@@ -77,6 +77,10 @@ const Index = () => {
   const [dailySavings, setDailySavings] = useState<number | null>(null);
   const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
   const [selectedJarNoteId, setSelectedJarNoteId] = useState<number | null>(null);
+  const [showEditCategoryModal, setShowEditCategoryModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [showDeleteCategoryConfirm, setShowDeleteCategoryConfirm] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -215,6 +219,30 @@ const Index = () => {
       setNewCategory({ name: '', icon: '' });
       setShowCategoryModal(false);
     }
+  };
+
+  const updateCategory = () => {
+    if (editingCategory && editingCategory.name.trim()) {
+      const updatedCategories = categories.map(cat =>
+        cat.id === editingCategory.id ? editingCategory : cat
+      );
+      setCategories(updatedCategories);
+      setShowEditCategoryModal(false);
+      setEditingCategory(null);
+    }
+  };
+
+  const deleteCategory = (categoryId: number) => {
+    // Delete all jars associated with this category
+    const updatedJars = jars.filter(jar => jar.categoryId !== categoryId);
+    setJars(updatedJars);
+    
+    // Delete the category
+    const updatedCategories = categories.filter(cat => cat.id !== categoryId);
+    setCategories(updatedCategories);
+    
+    setShowDeleteCategoryConfirm(false);
+    setCategoryToDelete(null);
   };
 
   const getCategoryJars = (categoryId: number) => {
@@ -530,20 +558,44 @@ const Index = () => {
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className={`text-base sm:text-lg font-bold text-green-600`}>
-                            {categoryJars.length > 0 ? categoryJars[0].currency : '$'}{formatCurrency(categoryTotal)}
-                          </p>
-                          <p className={`text-xs ${textSecondary}`}>
-                            of {categoryJars.length > 0 ? categoryJars[0].currency : '$'}{formatCurrency(categoryTarget)}
-                          </p>
-                          <p className={`text-xs font-bold ${
-                            parseFloat(categoryProgress) >= 75 ? 'text-green-600' :
-                            parseFloat(categoryProgress) >= 50 ? 'text-blue-600' :
-                            parseFloat(categoryProgress) >= 25 ? 'text-orange-600' : 'text-red-600'
-                          }`}>
-                            {categoryProgress}%
-                          </p>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingCategory(category);
+                              setShowEditCategoryModal(true);
+                            }}
+                            className={`p-2 rounded-lg ${darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-white hover:bg-gray-100'} transition-colors`}
+                            title="Edit Category"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${textColor}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setCategoryToDelete(category);
+                              setShowDeleteCategoryConfirm(true);
+                            }}
+                            className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
+                            title="Delete Category"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                          <div className="text-right ml-2">
+                            <p className={`text-base sm:text-lg font-bold text-green-600`}>
+                              {categoryJars.length > 0 ? categoryJars[0].currency : '$'}{formatCurrency(categoryTotal)}
+                            </p>
+                            <p className={`text-xs ${textSecondary}`}>
+                              of {categoryJars.length > 0 ? categoryJars[0].currency : '$'}{formatCurrency(categoryTarget)}
+                            </p>
+                            <p className={`text-xs font-bold ${
+                              parseFloat(categoryProgress) >= 75 ? 'text-green-600' :
+                              parseFloat(categoryProgress) >= 50 ? 'text-blue-600' :
+                              parseFloat(categoryProgress) >= 25 ? 'text-orange-600' : 'text-red-600'
+                            }`}>
+                              {categoryProgress}%
+                            </p>
+                          </div>
                         </div>
                       </div>
 
@@ -1105,6 +1157,66 @@ const Index = () => {
               </SavingsButton>
               <SavingsButton onClick={createCategory} className="flex-1 whitespace-nowrap">
                 Create
+              </SavingsButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Category Modal */}
+      {showEditCategoryModal && editingCategory && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4 z-40">
+          <div className={`${cardBg} rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl`}>
+            <h3 className={`text-xl sm:text-2xl font-bold mb-6 ${textColor}`}>Edit Category</h3>
+            <input
+              type="text"
+              placeholder="Category Name"
+              value={editingCategory.name}
+              onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+              className={`w-full px-4 py-3 rounded-xl border-2 border-primary focus:outline-none mb-4 ${
+                darkMode ? 'bg-gray-700 text-white' : ''
+              }`}
+            />
+            <div className="flex gap-3">
+              <SavingsButton 
+                variant="secondary" 
+                onClick={() => {
+                  setShowEditCategoryModal(false);
+                  setEditingCategory(null);
+                }} 
+                className="flex-1 whitespace-nowrap"
+              >
+                Cancel
+              </SavingsButton>
+              <SavingsButton onClick={updateCategory} className="flex-1 whitespace-nowrap">
+                Save
+              </SavingsButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Category Confirmation Modal */}
+      {showDeleteCategoryConfirm && categoryToDelete && (
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4 z-50">
+          <div className={`${cardBg} rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl`}>
+            <h3 className={`text-xl sm:text-2xl font-bold mb-4 ${textColor}`}>Delete Category?</h3>
+            <p className={`mb-6 ${textSecondary}`}>
+              Delete category "{categoryToDelete.name}"? This will also delete all jars in this category. This cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <SavingsButton
+                variant="secondary"
+                onClick={() => {
+                  setShowDeleteCategoryConfirm(false);
+                  setCategoryToDelete(null);
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </SavingsButton>
+              <SavingsButton variant="danger" onClick={() => deleteCategory(categoryToDelete.id)} className="flex-1">
+                Delete
               </SavingsButton>
             </div>
           </div>
