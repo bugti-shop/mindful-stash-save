@@ -1,4 +1,4 @@
-import { Download, Upload, Mail } from "lucide-react";
+import { Download, Upload } from "lucide-react";
 import { Button } from "./ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -52,13 +52,6 @@ export const BackupSync = ({ onExport, onImport }: BackupSyncProps) => {
     }
   };
 
-  const handleEmailBackup = () => {
-    handleExportToDevice();
-    toast({
-      title: "Next Step",
-      description: "Email the downloaded file to yourself for cloud backup via Gmail.",
-    });
-  };
 
   const handleImportFromDevice = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -106,18 +99,13 @@ export const BackupSync = ({ onExport, onImport }: BackupSyncProps) => {
         <DialogHeader>
           <DialogTitle>Backup & Restore Data</DialogTitle>
           <DialogDescription>
-            Save your data to device or email, and restore when needed.
+            Save your data to device and restore when needed.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3 py-4">
           <Button onClick={handleExportToDevice} className="w-full justify-start gap-2">
             <Download className="h-4 w-4" />
             Backup to Device
-          </Button>
-          
-          <Button onClick={handleEmailBackup} variant="outline" className="w-full justify-start gap-2">
-            <Mail className="h-4 w-4" />
-            Backup via Gmail
           </Button>
           
           <div className="relative">

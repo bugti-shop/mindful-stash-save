@@ -5,6 +5,7 @@ import JarVisualization from '@/components/JarVisualization';
 import SavingsChart from '@/components/SavingsChart';
 import EmotionalInsights from '@/components/EmotionalInsights';
 import { BackupSync } from '@/components/BackupSync';
+import { NotificationSettings } from '@/components/NotificationSettings';
 import { storage } from '@/lib/storage';
 import { formatCurrency } from '@/lib/utils';
 import logoImg from '@/assets/logo.png';
@@ -411,6 +412,7 @@ const Index = () => {
               </h1>
             </div>
             <div className="flex items-center gap-2">
+              <NotificationSettings />
               <BackupSync 
                 onExport={() => {}} 
                 onImport={() => {}}
