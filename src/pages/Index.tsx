@@ -4,6 +4,7 @@ import SavingsButton from '@/components/SavingsButton';
 import JarVisualization from '@/components/JarVisualization';
 import SavingsChart from '@/components/SavingsChart';
 import EmotionalInsights from '@/components/EmotionalInsights';
+import { BackupSync } from '@/components/BackupSync';
 import { storage } from '@/lib/storage';
 import { formatCurrency } from '@/lib/utils';
 import logoImg from '@/assets/logo.png';
@@ -409,12 +410,18 @@ const Index = () => {
                 Jarify
               </h1>
             </div>
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className={`p-2 sm:p-3 rounded-full ${darkMode ? 'bg-gray-800/80' : 'bg-white/80'} backdrop-blur-sm shadow-lg hover:shadow-xl transition-all border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}
-            >
-              {darkMode ? <Sun className="text-yellow-400" size={20} /> : <Moon className="text-indigo-600" size={20} />}
-            </button>
+            <div className="flex items-center gap-2">
+              <BackupSync 
+                onExport={() => {}} 
+                onImport={() => {}}
+              />
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className={`p-2 sm:p-3 rounded-full ${darkMode ? 'bg-gray-800/80' : 'bg-white/80'} backdrop-blur-sm shadow-lg hover:shadow-xl transition-all border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}
+              >
+                {darkMode ? <Sun className="text-yellow-400" size={20} /> : <Moon className="text-indigo-600" size={20} />}
+              </button>
+            </div>
           </div>
         </div>
       </div>
