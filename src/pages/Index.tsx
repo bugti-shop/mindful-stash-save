@@ -81,6 +81,7 @@ const Index = () => {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [showDeleteCategoryConfirm, setShowDeleteCategoryConfirm] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
   // Load data from localStorage on mount
   useEffect(() => {
@@ -547,7 +548,11 @@ const Index = () => {
                   const categoryProgress = categoryTarget > 0 ? ((categoryTotal / categoryTarget) * 100).toFixed(1) : '0.0';
 
                   return (
-                    <div key={category.id} className={`${darkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-blue-50/50 to-purple-50/50'} rounded-2xl p-4 sm:p-5`}>
+                    <div 
+                      key={category.id} 
+                      className={`${darkMode ? 'bg-gray-700/50' : 'bg-gradient-to-br from-blue-50/50 to-purple-50/50'} rounded-2xl p-4 sm:p-5 cursor-pointer`}
+                      onClick={() => setSelectedCategoryId(selectedCategoryId === category.id ? null : category.id)}
+                    >
                       {/* Category Header */}
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -559,28 +564,21 @@ const Index = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => {
-                              setEditingCategory(category);
-                              setShowEditCategoryModal(true);
-                            }}
-                            className={`p-2 rounded-lg ${darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-white hover:bg-gray-100'} transition-colors`}
-                            title="Edit Category"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${textColor}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => {
-                              setCategoryToDelete(category);
-                              setShowDeleteCategoryConfirm(true);
-                            }}
-                            className="p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
-                            title="Delete Category"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          {selectedCategoryId === category.id && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingCategory(category);
+                                setShowEditCategoryModal(true);
+                              }}
+                              className={`p-2 rounded-lg ${darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-white hover:bg-gray-100'} transition-colors`}
+                              title="Edit Category"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${textColor}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                              </svg>
+                            </button>
+                          )}
                           <div className="text-right ml-2">
                             <p className={`text-base sm:text-lg font-bold text-green-600`}>
                               {categoryJars.length > 0 ? categoryJars[0].currency : '$'}{formatCurrency(categoryTotal)}
