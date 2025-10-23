@@ -6,6 +6,7 @@ import SavingsChart from '@/components/SavingsChart';
 import EmotionalInsights from '@/components/EmotionalInsights';
 import { BackupSync } from '@/components/BackupSync';
 import { NotificationSettings } from '@/components/NotificationSettings';
+import { AdvancedAnalytics } from '@/components/AdvancedAnalytics';
 import { storage } from '@/lib/storage';
 import { formatCurrency } from '@/lib/utils';
 import logoImg from '@/assets/logo.png';
@@ -470,6 +471,8 @@ const Index = () => {
                   darkMode={darkMode}
                   currency={jars.length > 0 ? jars[jars.length - 1].currency : '$'}
                 />
+
+                <AdvancedAnalytics jars={jars} darkMode={darkMode} />
 
                 <div className={`${cardBg} rounded-3xl p-4 sm:p-6 shadow-lg`}>
                   <div className="flex items-center gap-3 mb-4">
